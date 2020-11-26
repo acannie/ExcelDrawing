@@ -55,8 +55,8 @@ print('100%')
 print(' ', end='')
 
 # 出力
-for i in range(1, IMG_HEIGHT):
-    for j in range(1, math.floor(IMG_WIDTH / N)):
+for i in range(0, IMG_HEIGHT):
+    for j in range(0, math.floor(IMG_WIDTH / N)):
         # 横に並んだ N ピクセルの平均 RGB をセルの背景色とする
         ave_RGB = [0, 0, 0]
 
@@ -68,7 +68,7 @@ for i in range(1, IMG_HEIGHT):
             ave_RGB[color] = round(ave_RGB[color] / N)
 
         fill = PatternFill(patternType='solid', fgColor=RGBtoColorCode(ave_RGB))
-        ws.cell(row=i, column=j).fill = fill
+        ws.cell(row=i+1, column=j+1).fill = fill
 
     # ゲージを増やす
     if math.ceil(i / IMG_HEIGHT * GAUGE_WIDTH) > now_pacentage:
@@ -80,7 +80,7 @@ print('')
 # ファイルのエクスポート
 print("saving...")
 
-output_file = input_file.replace('.jpg', '.xlsx')
+output_file = input_file.replace('.jpg', '.xlsx') # 元画像名と同名の .xlsx ファイルとして出力
 wb.save('result/' + output_file)
 wb.close()
 
