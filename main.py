@@ -1,64 +1,83 @@
-from PIL import Image
 import numpy as np
 import openpyxl
+import math
+import sys
+from PIL import Image
 from openpyxl.styles import PatternFill
 
-# RGBの数値が1桁の場合冒頭に0をつけて2桁にして返す
-def addZero(hexRGB):
-    if len(hexRGB) == 3:
-        return '0x0' + hexRGB[2]
-    else:
-        return hexRGB
-
-# RGBをカラーコードに変換
-def RGBtoColorCode(R, G, B):
-    color_code = '{}{}{}'.format(addZero(hex(R)), addZero(
-        hex(G)), addZero(hex(B)))  # 0xAA0xBB0xCC の形
-    color_code = color_code.replace('0x', '')
-    return color_code
+# 定数
+N = 3  # 1つのセルの縦幅に対する横幅の大きさ
+R = 0
+G = 1
+B = 2
 
 # ファイルのインポート
 input_file = 'icon.jpg'
 im = np.array(Image.open('figure/' + input_file))
 
 # 画像のサイズを取得
-img_height = im.shape[0]
-img_width = im.shape[1]
+IMG_HEIGHT = im.shape[0]
+IMG_WIDTH = im.shape[1]
+
+COLOR_VARIETY = im.shape[2]
 
 # ワークブックを作成
 wb = openpyxl.Workbook()
 ws = wb.worksheets[0]
 
-n = 3  # 1つのセルの縦幅に対する横幅の大きさ
+# RGBの数値が1桁の場合冒頭に0をつけて2桁にして返す
+def addZero(strHexNum='0xAA'):
+    if len(strHexNum) == 3:
+        return '0x0' + strHexNum[2]
+    elif len(strHexNum) == 4:
+        return strHexNum
+    else:
+        print('error!')
+        sys.exit()
+
+# RGBをカラーコードに変換
+def RGBtoColorCode(RGB=[0, 0, 0]):
+    color_code = ''
+    for color in range(COLOR_VARIETY):
+        color_code += str(addZero(hex(RGB[color])))
+    color_code = color_code.replace('0x', '') # 0xrr0xgg0xbb を rrggbb の形にする
+    return color_code
 
 # ゲージ
-print("0                             100%")
-print(" ", end="")
+GAUGE_WIDTH = 30
+now_pacentage = 0 # 範囲: 0 - 100
 
-now_pacentage = 0
+print('0', end='')
+for g in range(GAUGE_WIDTH):
+    print(' ', end='')
+print('100%')
 
-for r in range(1, img_height):
-    for c in range(1, int(img_width / n)):
-        # 横に並んだnピクセルの平均RGBをセルの背景色とする
-        RGB_ave = [0, 0, 0]
-        for i in range(n):
-            for j in range(im.shape[2]):
-                RGB_ave[j] += im[r][n*c + i][j]
+print(' ', end='')
 
-        for j in range(im.shape[2]):
-            RGB_ave[j] = int(RGB_ave[j]/n)
+# 出力
+for i in range(1, IMG_HEIGHT):
+    for j in range(1, math.floor(IMG_WIDTH / N)):
+        # 横に並んだ N ピクセルの平均 RGB をセルの背景色とする
+        ave_RGB = [0, 0, 0]
 
-        color_code = RGBtoColorCode(RGB_ave[0], RGB_ave[1], RGB_ave[2])
-        fill = PatternFill(patternType='solid', fgColor=color_code)
-        ws.cell(row=r, column=c).fill = fill
+        for n in range(N):
+            for color in range(COLOR_VARIETY):
+                ave_RGB[color] += im[i][N * j + n][color]
+
+        for color in range(COLOR_VARIETY):
+            ave_RGB[color] = round(ave_RGB[color] / N)
+
+        fill = PatternFill(patternType='solid', fgColor=RGBtoColorCode(ave_RGB))
+        ws.cell(row=i, column=j).fill = fill
 
     # ゲージを増やす
-    if int(r*30 / img_height) > now_pacentage:
+    if math.ceil(i / IMG_HEIGHT * GAUGE_WIDTH) > now_pacentage:
         print("■", end="", flush=True)
-        now_pacentage = int(r*30 / img_height)
+        now_pacentage = math.ceil(i / IMG_HEIGHT * GAUGE_WIDTH)
+
+print('')
 
 # ファイルのエクスポート
-print('')
 print("saving...")
 
 output_file = input_file.replace('.jpg', '.xlsx')
