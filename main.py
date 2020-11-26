@@ -18,8 +18,8 @@ def RGBtoColorCode(R, G, B):
     return color_code
 
 # ファイルのインポート
-input_file = 'sample.jpg'
-im = np.array(Image.open(input_file))
+input_file = 'icon.jpg'
+im = np.array(Image.open('figure/' + input_file))
 
 # 画像のサイズを取得
 img_height = im.shape[0]
@@ -62,7 +62,7 @@ print('')
 print("saving...")
 
 output_file = input_file.replace('.jpg', '.xlsx')
-wb.save(output_file)
+wb.save('result/' + output_file)
 wb.close()
 
 print("complete!")
